@@ -4,11 +4,10 @@
 
 set -e
 
-
 usage() {
     bn=$(basename $0)
     cat <<EOF
-$0: manage .mrconfig
+$0: manage home directory using mr
 
 NAME
   $bn - a command to manage detached git repositories using mr
@@ -22,7 +21,7 @@ SYNOPSIS
 
 COMMANDS
   init 
-      create .mrconfig  
+      create ~/.mrconfig
 
   add repository_name
       checkout the repository from the remote host and add it to
@@ -40,7 +39,8 @@ EOF
 
 GIT_HOST=flounder.vireo.org
 REMOTE_REPOS=~/git
-LOCAL_REPOS=.fgits
+LOCAL_REPOS=~/.fgits
+MRCONFIG=~/.mrconfig
 
 
 init() {
@@ -49,13 +49,13 @@ init() {
 	usage
     fi
     
-    if [ -e .mrconfig ]; then
-	echo .mrconfig already exists
+    if [ -e $MRCONFIG ]; then
+	echo $MRCONFIG already exists
 	exit 1
     fi
 
     mkdir $LOCAL_REPOS
-    cat <<END > .mrconfig
+    cat <<END > $MRCONFIG
 [DEFAULT]
 include = cat /usr/share/mr/git-fake-bare
 END
@@ -85,7 +85,7 @@ add() {
 	git config core.bare false
 	GIT_WORK_TREE="$PWD" git pull
 	trap - 0
-	cat <<END >> .mrconfig
+	cat <<END >> $MRCONFIG
 
 [$LOCAL_REPO]
 checkout = git_fake_bare_checkout '$REPO_URL' '$REPO_NAME' '../../'
@@ -133,7 +133,7 @@ new() {
 	git push --all
 	
 	trap - 0
-	cat <<END >> .mrconfig
+	cat <<END >> $MRCONFIG
 
 [$LOCAL_REPO]
 checkout = git_fake_bare_checkout '$REPO_URL' '$REPO_NAME' '../../'
