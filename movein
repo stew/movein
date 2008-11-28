@@ -1,0 +1,156 @@
+#!/bin/sh
+#
+# Copyright © 2008 Mike O'Connor <stew@vireo.org>
+
+set -e
+
+
+usage() {
+    bn=$(basename $0)
+    cat <<EOF
+$0: manage .mrconfig
+
+NAME
+  $bn - a command to manage detached git repositories using mr
+
+SYNOPSIS
+  $bn command [options]
+
+  $bn init
+  $bn add repository_name
+  $bn new repository_name file1 [file2 file3...]
+
+COMMANDS
+  init 
+      create .mrconfig  
+
+  add repository_name
+      checkout the repository from the remote host and add it to
+      mr's configuration
+
+  new repository_name file1 [file2 file3...]  
+      create a new repository on the remote host, and checkin the
+      listed files to the new repository.   Add the new repository
+      to mr's configuration
+EOF
+
+    exit 1
+}
+
+
+GIT_HOST=flounder.vireo.org
+REMOTE_REPOS=~/git
+LOCAL_REPOS=.fgits
+
+
+init() {
+
+    if [ $# -ne 0 ]; then 
+	usage
+    fi
+    
+    if [ -e .mrconfig ]; then
+	echo .mrconfig already exists
+	exit 1
+    fi
+
+    mkdir $LOCAL_REPOS
+    cat <<END > .mrconfig
+[DEFAULT]
+include = cat /usr/share/mr/git-fake-bare
+END
+}
+
+
+add() {
+    if [ $# -ne 1 ]; then 
+	usage
+    fi
+    REPO_NAME=$1.git ; shift
+    LOCAL_REPO=$LOCAL_REPOS/$REPO_NAME
+    REPO_URL=ssh://$GIT_HOST/$REMOTE_REPOS/$REPO_NAME
+
+    if [ -e "$LOCAL_REPO" ]; then
+	echo $LOCAL_REPO already exists
+	exit 1
+    else
+	trap "rm -rf $LOCAL_REPO" 0
+	mkdir "$LOCAL_REPO"
+	export GIT_DIR="$LOCAL_REPO"
+	git init --bare
+	git remote add origin $REPO_URL
+	git config branch.master.remote origin
+	git config branch.master.merge refs/heads/master
+	git config core.worktree ../../
+	git config core.bare false
+	GIT_WORK_TREE="$PWD" git pull
+	trap - 0
+	cat <<END >> .mrconfig
+
+[$LOCAL_REPO]
+checkout = git_fake_bare_checkout '$REPO_URL' '$REPO_NAME' '../../'
+END
+    fi
+
+}
+
+new() {
+    if [ $# -lt 2 ]; then 
+	usage
+    fi
+    REPO_NAME=$1.git ; shift
+    LOCAL_REPO="$LOCAL_REPOS/$REPO_NAME"
+    REPO_URL="ssh://$GIT_HOST/$REMOTE_REPOS/$REPO_NAME"
+
+    if [ ! -e "$1" ]; then
+	echo $1 not found
+	exit 1
+    fi
+
+    if [ -e "$LOCAL_REPO" ]; then
+	echo $LOCAL_REPO already exists
+	exit 1
+    else
+	trap "rm -rf $LOCAL_REPO" 0
+	mkdir -p "$LOCAL_REPO"
+
+	ssh $GIT_HOST "
+               GIT_DIR=$REMOTE_REPOS/$REPO_NAME git --bare init
+        " </dev/null
+
+	export GIT_DIR="$LOCAL_REPO"
+	git init --bare
+	git remote add origin $REPO_URL
+	git config branch.master.remote origin
+	git config branch.master.merge refs/heads/master
+	git config core.worktree ../../
+	git config core.bare false
+#	for file in  ; do 
+	export GIT_WORK_TREE="$PWD"
+	    git add "$@"
+#	done
+	git commit -m "initial checkin"
+	git push --all
+	
+	trap - 0
+	cat <<END >> .mrconfig
+
+[$LOCAL_REPO]
+checkout = git_fake_bare_checkout '$REPO_URL' '$REPO_NAME' '../../'
+END
+    fi
+
+}
+
+command=$1 ; shift
+case "$command" in 
+    init)
+	init $@
+	;;
+    add)
+        add $@
+	;;
+    new)
+        new $@
+	;;
+esac
