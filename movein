@@ -41,7 +41,9 @@ GIT_HOST=flounder.vireo.org
 REMOTE_REPOS=~/git
 LOCAL_REPOS=~/.fgits
 MRCONFIG=~/.mrconfig
+MOVEIN=~/.movein
 
+source $MOVEIN
 
 init() {
 
@@ -53,12 +55,50 @@ init() {
 	echo $MRCONFIG already exists
 	exit 1
     fi
+    
+    if [ -e $MOVEIN ]; then
+	echo $MOVEIN already exists
+	exit 1
+    fi
+
+    echo -n "git server hostname? [git.vireo.org] " 
+    read GIT_HOST
+    if [ -z "$GIT_HOST" ]; then 
+	GIT_HOST=git.vireo.org
+    fi
+
+    echo -n "path to remote repositories? [~/git] " 
+    read REMOTE_REPOS
+    if [ -z "$REMOTE_REPOS" ]; then 
+	REMOTE_REPOS=~/git
+    fi
+
+    echo -n "Local repository directory? [~/.fgit] " 
+    read LOCAL_REPOS
+    if [ -z "$LOCAL_REPOS" ]; then 
+	LOCAL_REPOS=~/.fgits
+    fi
+
+    echo -n "Location of .mrconfig file? [~/.mrconfig] " 
+    read MRCONFIG
+    if [ -z "$MRCONFIG" ]; then 
+	MRCONFIG=~/.mrconfig
+    fi
+
+    cat <<EOF > .movein
+GIT_HOST=$GIT_HOST
+REMOTE_REPOS=$REMOTE_REPOS
+LOCAL_REPOS=$LOCAL_REPOS
+MRCONFIG=$MRCONFIG
+EOF
 
     mkdir $LOCAL_REPOS
     cat <<END > $MRCONFIG
 [DEFAULT]
 include = cat /usr/share/mr/git-fake-bare
 END
+
+    
 }
 
 
