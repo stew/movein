@@ -6,16 +6,16 @@
 # under the terms of the GNU General Public License as published by the
 # Free Software Foundation; either version 2, or (at your option) any
 # later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
-# USA.  
+# USA.
 
 
 set -e
@@ -39,7 +39,7 @@ SYNOPSIS
   $bn login repository_name
 
 COMMANDS
-  init 
+  init
       create ~/.mrconfig
 
   ls
@@ -50,7 +50,7 @@ COMMANDS
       checkout the repository from the remote host and add it to
       mr's configuration
 
-  new repository_name file1 [file2 file3...]  
+  new repository_name file1 [file2 file3...]
       create a new repository on the remote host, and checkin the
       listed files to the new repository.   Add the new repository
       to mr's configuration
@@ -74,42 +74,42 @@ MOVEINRC=~/.moveinrc
 
 init() {
 
-    if [ $# -ne 0 ]; then 
-	usage
+    if [ $# -ne 0 ]; then
+	    usage
     fi
-    
+
     if [ -e $MRCONFIG ]; then
-	echo $MRCONFIG already exists
-	exit 1
+	    echo $MRCONFIG already exists
+	    exit 1
     fi
-    
+
     if [ -e $MOVEINRC ]; then
-	echo $MOVEINRC already exists
-	exit 1
+	    echo $MOVEINRC already exists
+	    exit 1
     fi
 
-    echo -n "git server hostname? [git.vireo.org] " 
+    echo -n "git server hostname? [git.vireo.org] "
     read GIT_HOST
-    if [ -z "$GIT_HOST" ]; then 
-	GIT_HOST=git.vireo.org
+    if [ -z "$GIT_HOST" ]; then
+	    GIT_HOST=git.vireo.org
     fi
 
-    echo -n "path to remote repositories? [~/git] " 
+    echo -n "path to remote repositories? [~/git] "
     read REMOTE_REPOS
-    if [ -z "$REMOTE_REPOS" ]; then 
-	REMOTE_REPOS=~/git
+    if [ -z "$REMOTE_REPOS" ]; then
+	    REMOTE_REPOS=~/git
     fi
 
-    echo -n "Local repository directory? [~/.movein] " 
+    echo -n "Local repository directory? [~/.movein] "
     read LOCAL_REPOS
-    if [ -z "$LOCAL_REPOS" ]; then 
-	LOCAL_REPOS=~/.movein
+    if [ -z "$LOCAL_REPOS" ]; then
+	    LOCAL_REPOS=~/.movein
     fi
 
-    echo -n "Location of .mrconfig file? [~/.mrconfig] " 
+    echo -n "Location of .mrconfig file? [~/.mrconfig] "
     read MRCONFIG
-    if [ -z "$MRCONFIG" ]; then 
-	MRCONFIG=~/.mrconfig
+    if [ -z "$MRCONFIG" ]; then
+	    MRCONFIG=~/.mrconfig
     fi
 
     cat <<EOF > $MOVEINRC
@@ -119,8 +119,8 @@ LOCAL_REPOS=$LOCAL_REPOS
 MRCONFIG=$MRCONFIG
 EOF
 
-    if [ ! -d "$LOCAL_REPOS" ]; then 
-	mkdir -p "$LOCAL_REPOS"
+    if [ ! -d "$LOCAL_REPOS" ]; then
+	    mkdir -p "$LOCAL_REPOS"
     fi
 
     cat <<END > $MRCONFIG
@@ -128,12 +128,12 @@ EOF
 include = cat /usr/share/mr/git-fake-bare
 END
 
-    
+
 }
 
 login() {
-    if [ $# -ne 1 ]; then 
-	usage
+    if [ $# -ne 1 ]; then
+	    usage
     fi
 
     export GIT_DIR="$LOCAL_REPOS/${1}.git"
@@ -143,29 +143,29 @@ login() {
 }
 
 add() {
-    if [ $# -ne 1 ]; then 
-	usage
+    if [ $# -ne 1 ]; then
+	    usage
     fi
     REPO_NAME=$1.git ; shift
     LOCAL_REPO=$LOCAL_REPOS/$REPO_NAME
     REPO_URL=ssh://$GIT_HOST/$REMOTE_REPOS/$REPO_NAME
 
     if [ -e "$LOCAL_REPO" ]; then
-	echo $LOCAL_REPO already exists
-	exit 1
+	    echo $LOCAL_REPO already exists
+	    exit 1
     else
-	trap "rm -rf $LOCAL_REPO" 0
-	mkdir "$LOCAL_REPO"
-	export GIT_DIR="$LOCAL_REPO"
-	git init --bare
-	git remote add origin $REPO_URL
-	git config branch.master.remote origin
-	git config branch.master.merge refs/heads/master
-	git config core.worktree ../../
-	git config core.bare false
-	GIT_WORK_TREE="$PWD" git pull
-	trap - 0
-	cat <<END >> $MRCONFIG
+	    trap "rm -rf $LOCAL_REPO" 0
+	    mkdir "$LOCAL_REPO"
+	    export GIT_DIR="$LOCAL_REPO"
+	    git init --bare
+	    git remote add origin $REPO_URL
+	    git config branch.master.remote origin
+	    git config branch.master.merge refs/heads/master
+	    git config core.worktree ../../
+	    git config core.bare false
+	    GIT_WORK_TREE="$PWD" git pull
+	    trap - 0
+	    cat <<END >> $MRCONFIG
 
 [$LOCAL_REPO]
 checkout = git_fake_bare_checkout '$REPO_URL' '$REPO_NAME' '../../'
@@ -179,45 +179,45 @@ list() {
 }
 
 new() {
-    if [ $# -lt 2 ]; then 
-	usage
+    if [ $# -lt 2 ]; then
+	    usage
     fi
     REPO_NAME=$1.git ; shift
     LOCAL_REPO="$LOCAL_REPOS/$REPO_NAME"
     REPO_URL="ssh://$GIT_HOST/$REMOTE_REPOS/$REPO_NAME"
 
     if [ ! -e "$1" ]; then
-	echo $1 not found
-	exit 1
+	    echo $1 not found
+	    exit 1
     fi
 
     if [ -e "$LOCAL_REPO" ]; then
-	echo $LOCAL_REPO already exists
-	exit 1
+	    echo $LOCAL_REPO already exists
+	    exit 1
     else
-	trap "rm -rf $LOCAL_REPO" 0
-	mkdir -p "$LOCAL_REPO"
+	    trap "rm -rf $LOCAL_REPO" 0
+	    mkdir -p "$LOCAL_REPO"
 
-	ssh $GIT_HOST "
+	    ssh $GIT_HOST "
                GIT_DIR=$REMOTE_REPOS/$REPO_NAME git --bare init
         " </dev/null
 
-	export GIT_DIR="$LOCAL_REPO"
-	git init --bare
-	git remote add origin $REPO_URL
-	git config branch.master.remote origin
-	git config branch.master.merge refs/heads/master
-	git config core.worktree ../../
-	git config core.bare false
-#	for file in  ; do 
-	export GIT_WORK_TREE="$PWD"
+	    export GIT_DIR="$LOCAL_REPO"
+	    git init --bare
+	    git remote add origin $REPO_URL
+	    git config branch.master.remote origin
+	    git config branch.master.merge refs/heads/master
+	    git config core.worktree ../../
+	    git config core.bare false
+       # for file in  ; do
+	    export GIT_WORK_TREE="$PWD"
 	    git add "$@"
-#	done
-	git commit -m "initial checkin"
-	git push --all
-	
-	trap - 0
-	cat <<END >> $MRCONFIG
+       # done
+	    git commit -m "initial checkin"
+	    git push --all
+
+	    trap - 0
+	    cat <<END >> $MRCONFIG
 
 [$LOCAL_REPO]
 checkout = git_fake_bare_checkout '$REPO_URL' '$REPO_NAME' '../../'
@@ -228,28 +228,28 @@ END
 
 
 command=$1 ; shift
-case "$command" in 
+case "$command" in
     init)
-	init $@
-	;;
+	    init $@
+	    ;;
     add)
         add $@
-	;;
+	    ;;
     new)
         new $@
-	;;
+	    ;;
     login)
         login $@
-	;;
+	    ;;
     ls)
         list
-	;;
+	    ;;
     list)
         list
-	;;
+	    ;;
 
     *)
-	usage
-	exit 1
-	;;
+	    usage
+	    exit 1
+	    ;;
 esac
