@@ -65,7 +65,7 @@ EOF
 }
 
 
-GIT_HOST=git.vireo.org
+GIT_HOST=git.$(hostname -d)
 REMOTE_REPOS=~/git
 LOCAL_REPOS=~/.movein
 MRCONFIG=~/.mrconfig
@@ -89,10 +89,10 @@ init() {
 	    exit 1
     fi
 
-    echo -n "git server hostname? [git.vireo.org] "
+    echo -n "git server hostname? [${GIT_HOST}] "
     read GIT_HOST
     if [ -z "$GIT_HOST" ]; then
-	    GIT_HOST=git.vireo.org
+	    GIT_HOST=git.$(hostname -d)
     fi
 
     echo -n "path to remote repositories? [~/git] "
