@@ -227,6 +227,24 @@ END
 
 }
 
+preflight() {
+    # Check a few requirements before doing any work
+    errors=0
+    set +e
+    for binary in mr git; do
+        bin=$(which ${binary})
+        if [ -z "${bin}" ]; then
+            echo "Missing required program: ${binary}"
+            errors=$(( errors + 1 ))
+        fi
+    done
+    set -e
+    if [ $errors -ne 0 ]; then
+        echo "Errors found, exiting"
+        exit 2
+    fi
+}
+
 if [ $# -lt 1 ]; then
     usage
     exit 1
@@ -238,9 +256,11 @@ case "$command" in
 	    init $@
 	    ;;
     add)
+        preflight
         add $@
 	    ;;
     new)
+        preflight
         new $@
 	    ;;
     login)
