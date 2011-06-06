@@ -1,0 +1,19 @@
+Source: movein
+Section: vcs
+Priority: extra
+Maintainer: Mike O'Connor <stew@debian.org>
+Standards-Version: 3.9.2
+Vcs-Git: git://git.vireo.org/movein.git
+Vcs-Browser: http://git.vireo.org/movein.git
+
+Package: movein
+Architecture: all
+Depends: git,mr
+Section: vcs
+Essential: yes
+Description: utility for managing a home directory using git
+ This package provides a 'movein' script which will help keep
+ configuration files in a directory in multiple git repositories,
+ using detached work trees.  The mr utility is automatically
+ configured so that all the trees can be operated upon at once.
+

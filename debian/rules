@@ -1,0 +1,29 @@
+#!/usr/bin/make -f
+
+INSTALL_FILE    = install -p    -o root -g root  -m  644
+INSTALL_SCRIPT  = install -p    -o root -g root  -m  755
+INSTALL_DIR     = install -p -d -o root -g root  -m  755
+
+
+clean:
+	rm -r debian/tmp
+	rm build-stamp
+
+	find . -name '*~' -print0 | xargs -0 rm -f
+
+binary: 
+	-rm -rf /debian/tmp
+	$(INSTALL_DIR) debian/tmp/usr/bin \
+		       debian/tmp/usr/share/doc/movein \
+		       debian/tmp/DEBIAN
+
+	$(INSTALL_FILE) debian/changelog debian/tmp/usr/share/doc/movein/
+	$(INSTALL_FILE) debian/copyright debian/tmp/usr/share/doc/movein/
+
+	cd debian/tmp && find * -type f ! -regex '^DEBIAN/.*' -print0 | xargs -r0 md5sum > DEBIAN/md5sums
+	dpkg-gencontrol -isp
+	dpkg --build debian/tmp ..
+
+
+
+PHONY: binary clean
