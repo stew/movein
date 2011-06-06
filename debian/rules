@@ -22,6 +22,8 @@ binary-indep:
 	$(INSTALL_FILE) debian/changelog debian/tmp/usr/share/doc/movein/
 	$(INSTALL_FILE) debian/copyright debian/tmp/usr/share/doc/movein/
 
+	gzip -9 debian/tmp/usr/share/doc/movein/changelog
+
 	cd debian/tmp && find * -type f ! -regex '^DEBIAN/.*' -print0 | xargs -r0 md5sum > DEBIAN/md5sums
 	dpkg-gencontrol -isp
 	dpkg --build debian/tmp ..
