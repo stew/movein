@@ -10,7 +10,6 @@ Package: movein
 Architecture: all
 Depends: git,mr
 Section: vcs
-Essential: yes
 Description: utility for managing a home directory using git
  This package provides a 'movein' script which will help keep
  configuration files in a directory in multiple git repositories,

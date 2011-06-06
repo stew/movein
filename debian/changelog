@@ -1,5 +1,5 @@
 movein (1.0) unstable; urgency=low
 
-	* initial release
+  * initial release
 
  -- Mike O'Connor <stew@debian.org>  Mon, 06 Jun 2011 10:56:03 -0400
