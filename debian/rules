@@ -20,6 +20,8 @@ binary-indep:
 		       debian/tmp/usr/share/doc/movein \
 		       debian/tmp/DEBIAN
 
+	$(INSTALL_SCRIPT) movein debian/tmp/usr/bin
+
 	$(INSTALL_FILE) debian/changelog debian/tmp/usr/share/doc/movein/
 	$(INSTALL_FILE) debian/copyright debian/tmp/usr/share/doc/movein/
 
