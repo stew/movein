@@ -5,11 +5,15 @@ INSTALL_SCRIPT  = install -p    -o root -g root  -m  755
 INSTALL_DIR     = install -p -d -o root -g root  -m  755
 
 
+build: 
+binary-arch:
+
+
 clean:
 	-rm -fr debian/tmp
 	find . -name '*~' -print0 | xargs -0 rm -f
 
-binary: 
+binary-indep:
 	-rm -rf /debian/tmp
 	$(INSTALL_DIR) debian/tmp/usr/bin \
 		       debian/tmp/usr/share/doc/movein \
@@ -22,6 +26,6 @@ binary:
 	dpkg-gencontrol -isp
 	dpkg --build debian/tmp ..
 
+binary: binary-indep
 
-
-PHONY: binary clean
+PHONY: build clean binary binary-arch binary-indep
