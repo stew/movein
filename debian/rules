@@ -11,6 +11,7 @@ binary-arch:
 
 clean:
 	-rm -fr debian/tmp
+	-rm -fr debian/files
 	find . -name '*~' -print0 | xargs -0 rm -f
 
 binary-indep:
