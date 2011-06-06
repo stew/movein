@@ -6,9 +6,7 @@ INSTALL_DIR     = install -p -d -o root -g root  -m  755
 
 
 clean:
-	rm -r debian/tmp
-	rm build-stamp
-
+	-rm -fr debian/tmp
 	find . -name '*~' -print0 | xargs -0 rm -f
 
 binary: 
