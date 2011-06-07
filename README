@@ -1,0 +1,181 @@
+movein - a script to help maintain a direcotry with multiple overlayed
+git repositories.
+
+The latest version should be avaliable from http://stew.vireo.org/movein
+
+My goal has been to keep my home directory in a version control system
+effectively.  I have a number of constraints however.  I want the
+system to be modular.  I don't always need X related config files in
+my home directory.  Sometimes I want just my zsh related files and my
+emacs related files.  I have multiple machines I check email from, and
+on those want to keep my notmuch/offlineimap files in sync, but I
+don't need these on every machine I'm on, expecially since those
+configurations have more sensitive data.  I played around with
+[laysvn](http://laysvn.alioth.debian.org/) for a while, but it never
+really seemed comfortable.  I more recently discovered that
+[madduck](http://madduck.net/) had started a
+"[vcs-home](http://vcs-home.madduck.net/)" website and mailing list,
+talking about doing what I'm trying to do.
+
+I'm now going with madduck's idea of using git with detached work
+trees, so that I can have multiple git repositories all using $HOME as
+their $GIT_WORK_TREE.  I have a script inspired by his
+[vcsh](http://git.madduck.net/v/etc/zsh.git?a=blob;f=.zsh/func/vcsh;hb=HEAD)
+script that will create a subshell where the GIT_DIR, GIT_WORK_TREE
+variables are set for me.  I can do my git operations related to just
+one git repository in that shell, while still operating directly on my
+config files in $HOME, and avoiding any kind of nasty symlinking or
+hardlinking.  Since I am usually using my script to allow me to
+quickly "move in" to a new host, I named my script "movein".  It can
+be found [here](http://git.vireo.org/movein.git/).  Here's how I'll
+typically use it:
+
+
+	    stew@guppy:~$ movein init
+	    git server hostname? git.vireo.org
+	    path to remote repositories? [~/git] 
+	    Local repository directory? [~/.movein] 
+	    Location of .mrconfig file? [~/.mrconfig] 
+	    stew@guppy:~$ 
+	
+This is just run once.  It asks me questions about how to setup the
+'movein' environment.  Now I should have a .moveinrc storing the
+answers I gave above, I have a stub of a .mrconfig, and an empty
+.movein directory.  Next thing to do is to add some of my
+repositories.  The one I typically add on all machines is my "shell"
+repository.  It has a .bashrc/.zshrc, an .alias that both source and
+other zsh goodies I'll generally wish to be around:
+
+	    stew@guppy:~$ ls .zshrc
+	    ls: cannot access .zshrc: No such file or directory
+	    stew@guppy:~$ movein add shell
+	    Initialized empty Git repository in /home/stew/.movein/shell.git/
+	    remote: Counting objects: 42, done.
+	    remote: Compressing objects: 100% (39/39), done.
+	    remote: Total 42 (delta 18), reused 0 (delta 0)
+	    Unpacking objects: 100% (42/42), done.
+	    From ssh://git.vireo.org//home/stew/git/shell
+	     * [new branch]      master     -> origin/master
+	    stew@guppy:~$ ls .zshrc
+	    .zshrc
+	
+So what happened here is that the ssh://git.vireo.org/~/git/shell.git
+repository was cloned with GIT_WORK_TREE=~ and
+GIT_DIR=.movein/shell.git.  My .zshrc (along with a bunch of other
+files) has appeared. Next perhaps I'll add my emacs config files:
+
+	    stew@guppy:~$ movein add emacs       
+	    Initialized empty Git repository in /home/stew/.movein/emacs.git/
+	    remote: Counting objects: 77, done.
+	    remote: Compressing objects: 100% (63/63), done.
+	    remote: Total 77 (delta 10), reused 0 (delta 0)
+	    Unpacking objects: 100% (77/77), done.
+	    From ssh://git.vireo.org//home/stew/git/emacs
+	     * [new branch]      emacs21    -> origin/emacs21
+	     * [new branch]      master     -> origin/master
+	    stew@guppy:~$ ls .emacs
+	    .emacs
+	    stew@guppy:~$ 
+	
+My remote repositry has a master branch, but also has an emacs21
+branch, which I can use when checking out on older machines which
+don't yet have newer versions of emacs.
+
+Let's say I have made changes to my .zshrc file, and I want to check
+them in.  Since we are working with detached work trees, git can't
+immediately help us:
+
+	    stew@guppy:~$ git status
+	    fatal: Not a git repository (or any of the parent directories): .git
+
+The movein script allows me to "login" to one of the repositories.  It
+will create a subshell with GIT_WORK_TREE and GIT_DIR set.  In that
+subshell, git operations operate as one might expect:
+
+	    stew@guppy:~ $ movein login shell
+	    stew@guppy:~ (shell:master>*) $ echo >> .zshrc
+	    stew@guppy:~ (shell:master>*) $ git add .zshrc                                       
+	    stew@guppy:~ (shell:master>*) $ git commit -m "adding a newline to the end of .zshrc"
+	    [master 81b7311] adding a newline to the end of .zshrc
+	     1 files changed, 1 insertions(+), 0 deletions(-)
+	    stew@guppy:~ (shell:master>*) $ git push
+	    Counting objects: 8, done.
+	    Delta compression using up to 2 threads.
+	    Compressing objects: 100% (6/6), done.
+	    Writing objects: 100% (6/6), 546 bytes, done.
+	    Total 6 (delta 4), reused 0 (delta 0)
+	    To ssh://git.vireo.org//home/stew/git/shell.git
+	       d24bf2d..81b7311  master -> master
+	    stew@guppy:~ (shell:master*) $ exit
+	    stew@guppy:~ $ 
+
+If I want to create a brand new repository from files in my home directory.  I can:
+
+	    stew@guppy:~ $ touch methere
+	    stew@guppy:~ $ touch mealsothere
+	    stew@guppy:~ $ movein new oohlala methere mealsothere
+	    Initialized empty Git repository in /home/stew/git/oohlala.git/
+	    Initialized empty Git repository in /home/stew/.movein/oohlala.git/
+	    [master (root-commit) 7abe5ba] initial checkin
+	     0 files changed, 0 insertions(+), 0 deletions(-)
+	     create mode 100644 mealsothere
+	     create mode 100644 methere
+	    Counting objects: 3, done.
+	    Delta compression using up to 2 threads.
+	    Compressing objects: 100% (2/2), done.
+	    Writing objects: 100% (3/3), 224 bytes, done.
+	    Total 3 (delta 0), reused 0 (delta 0)
+	    To ssh://git.vireo.org//home/stew/git/oohlala.git
+	     * [new branch]      master -> master
+	    
+Above, the command <code>movein new oohlala methere mealsothere</code>
+says "create a new repository containing two files: methere,
+mealsothere".  A bare repository is created on the remote machine, a
+repository is created in the .movein directory, the files are
+committed, and the new commit is pushed to the remote repository.  New
+on some other machine, I could run <code>movein add oohlala</code> to get these
+two new files.
+
+The movein script maintains a .mrconfig file, so that joeyh's
+[mr](http://kitenet.net/~joey/code/mr/) tool can be used to manage the repositories in bulk.  Commands
+like "mr update", "mr commit", "mr push" will act on all the known
+repositories.  Here's an example:
+
+	    stew@guppy:~ $ cat .mrconfig
+	    [DEFAULT]
+	    include = cat /usr/share/mr/git-fake-bare
+	    
+	    [/home/stew/.movein/emacs.git]
+	    checkout = git_fake_bare_checkout 'ssh://git.vireo.org//home/stew/git/emacs.git' 'emacs.git' '../../'
+	    
+	    [/home/stew/.movein/shell.git]
+	    checkout = git_fake_bare_checkout 'ssh://git.vireo.org//home/stew/git/shell.git' 'shell.git' '../../'
+	    
+	    [/home/stew/.movein/oohlala.git]
+	    checkout = git_fake_bare_checkout 'ssh://git.vireo.org//home/stew/git/oohlala.git' 'oohlala.git' '../../'
+
+	    stew@guppy:~ $ mr update
+	    mr update: /home/stew//home/stew/.movein/emacs.git
+	    From ssh://git.vireo.org//home/stew/git/emacs
+	     * branch            master     -> FETCH_HEAD
+	    Already up-to-date.
+	    
+	    mr update: /home/stew//home/stew/.movein/oohlala.git
+	    From ssh://git.vireo.org//home/stew/git/oohlala
+	     * branch            master     -> FETCH_HEAD
+	    Already up-to-date.
+	    
+	    mr update: /home/stew//home/stew/.movein/shell.git
+	    From ssh://git.vireo.org//home/stew/git/shell
+	     * branch            master     -> FETCH_HEAD
+	    Already up-to-date.
+	    
+	    mr update: finished (3 ok)
+	    stew@guppy:~ $ mr update	    
+
+There are still issues I'd like to address.  The big one in my mind is
+that there is no .gitignore.  So when you "movein login
+somerepository" then run "git status", It tells you about hundreds of
+untracked files in your home directory.  Ideally, I just want to know
+about the files which are already associated with the repository I'm
+logged into.
