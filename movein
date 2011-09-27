@@ -69,6 +69,7 @@ EOF
     exit 1
 }
 
+[ $# -ge 1 ] || usage
 
 GIT_HOST=git.vireo.org
 REMOTE_REPOS=~/git
