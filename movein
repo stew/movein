@@ -34,6 +34,8 @@ SYNOPSIS
   $bn init
   $bn ls
   $bn list
+  $bn ls-r
+  $bn list-remote
   $bn add repository_name
   $bn new repository_name file1 [file2 file3...]
   $bn login repository_name
@@ -44,7 +46,11 @@ COMMANDS
 
   ls
   list
-      show a list of repositories
+      show a list of local repositories
+
+  ls-r
+  list-remote
+      show a list of remote repositories
 
   add repository_name
       checkout the repository from the remote host and add it to
@@ -166,6 +172,12 @@ list() {
     find "${LOCAL_REPOS}" -mindepth 1 -maxdepth 1 -type d | sed 's,^.*/\([^/]*\).git$,\1,'
 }
 
+listremote() {
+    ssh $GIT_HOST "
+        find '${REMOTE_REPOS}' -mindepth 1 -maxdepth 1 -type d | sed 's,^.*/\([^/]*\).git$,\1,'
+    " </dev/null
+}
+
 new() {
     if [ $# -lt 2 ]; then 
 	usage
@@ -230,6 +242,12 @@ case "$command" in
 	;;
     list)
 	list
+	;;
+    ls-r)
+	listremote
+	;;
+    list-remote)
+	listremote
 	;;
 
     *)
