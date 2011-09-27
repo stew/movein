@@ -40,7 +40,7 @@ SYNOPSIS
 
 COMMANDS
   init 
-      create ~/.mrconfig
+      create ~/.moveinrc, create/update  ~/.mrconfig
 
   ls
   list
@@ -76,11 +76,6 @@ init() {
 
     if [ $# -ne 0 ]; then 
 	usage
-    fi
-    
-    if [ -e $MRCONFIG ]; then
-	echo $MRCONFIG already exists
-	exit 1
     fi
     
     if [ -e $MOVEINRC ]; then
@@ -123,11 +118,7 @@ EOF
 	mkdir -p "$LOCAL_REPOS"
     fi
 
-    cat <<END > $MRCONFIG
-[DEFAULT]
-include = cat /usr/share/mr/git-fake-bare
-END
-
+    mr -c "$MRCONFIG" config DEFAULT include="cat /usr/share/mr/git-fake-bare"
     
 }
 
@@ -165,13 +156,9 @@ add() {
 	git config core.bare false
 	GIT_WORK_TREE="$PWD" git pull
 	trap - 0
-	cat <<END >> $MRCONFIG
 
-[$LOCAL_REPO]
-checkout = git_fake_bare_checkout '$REPO_URL' '$REPO_NAME' '../../'
-END
+	mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' 'REPO_NAME' '../../'"
     fi
-
 }
 
 list() {
@@ -215,11 +202,8 @@ new() {
 	git push --all
 	
 	trap - 0
-	cat <<END >> $MRCONFIG
 
-[$LOCAL_REPO]
-checkout = git_fake_bare_checkout '$REPO_URL' '$REPO_NAME' '../../'
-END
+	mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' 'REPO_NAME' '../../'"
     fi
 
 }
