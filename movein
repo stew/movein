@@ -154,6 +154,7 @@ add() {
 	git config branch.master.merge refs/heads/master
 	git config core.bare false
 	git config core.worktree ../../
+	git config status.showUntrackedFiles no
 	GIT_WORK_TREE="$PWD" git pull
 	trap - 0
 
@@ -196,6 +197,7 @@ new() {
 	git config branch.master.merge refs/heads/master
 	git config core.bare false
 	git config core.worktree ../../
+	git config status.showUntrackedFiles no
 	export GIT_WORK_TREE="$PWD"
 	git add "$@"
 	git commit -m "initial checkin"
