@@ -217,19 +217,19 @@ case "$command" in
 	init $@
 	;;
     add)
-        add $@
+	add $@
 	;;
     new)
-        new $@
+	new $@
 	;;
     login)
-        login $@
+	login $@
 	;;
     ls)
-        list
+	list
 	;;
     list)
-        list
+	list
 	;;
 
     *)
