@@ -152,8 +152,8 @@ add() {
 	git remote add origin $REPO_URL
 	git config branch.master.remote origin
 	git config branch.master.merge refs/heads/master
-	git config core.worktree ../../
 	git config core.bare false
+	git config core.worktree ../../
 	GIT_WORK_TREE="$PWD" git pull
 	trap - 0
 
@@ -194,8 +194,8 @@ new() {
 	git remote add origin $REPO_URL
 	git config branch.master.remote origin
 	git config branch.master.merge refs/heads/master
-	git config core.worktree ../../
 	git config core.bare false
+	git config core.worktree ../../
 	export GIT_WORK_TREE="$PWD"
 	git add "$@"
 	git commit -m "initial checkin"
