@@ -155,7 +155,7 @@ add() {
 	git config core.bare false
 	git config core.worktree ../../
 	git config status.showUntrackedFiles no
-	GIT_WORK_TREE="$PWD" git pull
+	GIT_WORK_TREE="$LOCAL_REPO/../../" git pull
 	trap - 0
 
 	mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' 'REPO_NAME' '../../'"
@@ -198,7 +198,7 @@ new() {
 	git config core.bare false
 	git config core.worktree ../../
 	git config status.showUntrackedFiles no
-	export GIT_WORK_TREE="$PWD"
+	export GIT_WORK_TREE="$LOCAL_REPO/../../"
 	git add "$@"
 	git commit -m "initial checkin"
 	git push --all
