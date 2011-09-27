@@ -209,10 +209,8 @@ new() {
 	git config branch.master.merge refs/heads/master
 	git config core.worktree ../../
 	git config core.bare false
-#	for file in  ; do 
 	export GIT_WORK_TREE="$PWD"
-	    git add "$@"
-#	done
+	git add "$@"
 	git commit -m "initial checkin"
 	git push --all
 	
