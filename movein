@@ -162,7 +162,7 @@ add() {
 	git config branch.master.remote origin
 	git config branch.master.merge refs/heads/master
 	git config core.worktree ../../
-	git config core.bare false
+#	git config core.bare false
 	GIT_WORK_TREE="$PWD" git pull
 	trap - 0
 	cat <<END >> $MRCONFIG
@@ -208,7 +208,7 @@ new() {
 	git config branch.master.remote origin
 	git config branch.master.merge refs/heads/master
 	git config core.worktree ../../
-	git config core.bare false
+#	git config core.bare false
 #	for file in  ; do 
 	export GIT_WORK_TREE="$PWD"
 	    git add "$@"
