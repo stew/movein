@@ -34,17 +34,23 @@ SYNOPSIS
   $bn init
   $bn ls
   $bn list
+  $bn ls-r
+  $bn list-remote
   $bn add repository_name
   $bn new repository_name file1 [file2 file3...]
   $bn login repository_name
 
 COMMANDS
   init 
-      create ~/.mrconfig
+      create ~/.moveinrc, create/update  ~/.mrconfig
 
   ls
   list
-      show a list of repositories
+      show a list of local repositories
+
+  ls-r
+  list-remote
+      show a list of remote repositories
 
   add repository_name
       checkout the repository from the remote host and add it to
@@ -63,6 +69,7 @@ EOF
     exit 1
 }
 
+[ $# -ge 1 ] || usage
 
 GIT_HOST=git.vireo.org
 REMOTE_REPOS=~/git
@@ -76,11 +83,6 @@ init() {
 
     if [ $# -ne 0 ]; then 
 	usage
-    fi
-    
-    if [ -e $MRCONFIG ]; then
-	echo $MRCONFIG already exists
-	exit 1
     fi
     
     if [ -e $MOVEINRC ]; then
@@ -123,11 +125,7 @@ EOF
 	mkdir -p "$LOCAL_REPOS"
     fi
 
-    cat <<END > $MRCONFIG
-[DEFAULT]
-include = cat /usr/share/mr/git-fake-bare
-END
-
+    mr -c "$MRCONFIG" config DEFAULT include="cat /usr/share/mr/git-fake-bare"
     
 }
 
@@ -139,7 +137,7 @@ login() {
     export GIT_DIR="$LOCAL_REPOS/${1}.git"
     export GIT_WORK_TREE="$GIT_DIR/$(git config --get core.worktree)"
 
-    $SHELL -i || :
+    GIT_PS1_SHOWUNTRACKEDFILES= PSMOVEIN="movein:${1}" $SHELL -i || :
 }
 
 add() {
@@ -161,21 +159,24 @@ add() {
 	git remote add origin $REPO_URL
 	git config branch.master.remote origin
 	git config branch.master.merge refs/heads/master
-	git config core.worktree ../../
 	git config core.bare false
-	GIT_WORK_TREE="$PWD" git pull
+	git config core.worktree ../../
+	git config status.showUntrackedFiles no
+	GIT_WORK_TREE="$LOCAL_REPO/../../" git pull
 	trap - 0
-	cat <<END >> $MRCONFIG
 
-[$LOCAL_REPO]
-checkout = git_fake_bare_checkout '$REPO_URL' '$REPO_NAME' '../../'
-END
+	mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' 'REPO_NAME' '../../'"
     fi
-
 }
 
 list() {
     find "${LOCAL_REPOS}" -mindepth 1 -maxdepth 1 -type d | sed 's,^.*/\([^/]*\).git$,\1,'
+}
+
+listremote() {
+    ssh $GIT_HOST "
+        find '${REMOTE_REPOS}' -mindepth 1 -maxdepth 1 -type d | sed 's,^.*/\([^/]*\).git$,\1,'
+    " </dev/null
 }
 
 new() {
@@ -207,21 +208,17 @@ new() {
 	git remote add origin $REPO_URL
 	git config branch.master.remote origin
 	git config branch.master.merge refs/heads/master
-	git config core.worktree ../../
 	git config core.bare false
-#	for file in  ; do 
-	export GIT_WORK_TREE="$PWD"
-	    git add "$@"
-#	done
+	git config core.worktree ../../
+	git config status.showUntrackedFiles no
+	export GIT_WORK_TREE="$LOCAL_REPO/../../"
+	git add "$@"
 	git commit -m "initial checkin"
 	git push --all
 	
 	trap - 0
-	cat <<END >> $MRCONFIG
 
-[$LOCAL_REPO]
-checkout = git_fake_bare_checkout '$REPO_URL' '$REPO_NAME' '../../'
-END
+	mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' 'REPO_NAME' '../../'"
     fi
 
 }
@@ -233,19 +230,25 @@ case "$command" in
 	init $@
 	;;
     add)
-        add $@
+	add $@
 	;;
     new)
-        new $@
+	new $@
 	;;
     login)
-        login $@
+	login $@
 	;;
     ls)
-        list
+	list
 	;;
     list)
-        list
+	list
+	;;
+    ls-r)
+	listremote
+	;;
+    list-remote)
+	listremote
 	;;
 
     *)
