@@ -39,6 +39,7 @@ SYNOPSIS
   $bn add repository_name
   $bn new repository_name file1 [file2 file3...]
   $bn login repository_name
+  $bn exec repository_name command [arg1 arg2...]
 
 COMMANDS
   init 
@@ -63,6 +64,11 @@ COMMANDS
 
   login repository_name
       start a subshell in repository_name
+
+  exec repository_name command [arg1 arg2...]
+      execute a command in the context of repository_name, for example:
+        $bn exec myrepo git status
+        $bn exec myrepo git ls-files
 
 EOF
 
@@ -138,6 +144,20 @@ login() {
     export GIT_WORK_TREE="$GIT_DIR/$(git config --get core.worktree)"
 
     GIT_PS1_SHOWUNTRACKEDFILES= PSMOVEIN="movein:${1}" $SHELL -i || :
+}
+
+execin() {
+    local REPO
+    if [ $# -lt 1 ]; then
+	usage
+    fi
+
+    REPO=$1;shift
+
+    export GIT_DIR="$LOCAL_REPOS/${REPO}.git"
+    export GIT_WORK_TREE="$GIT_DIR/$(git config --get core.worktree)"
+
+    "$@"
 }
 
 add() {
@@ -237,6 +257,9 @@ case "$command" in
 	;;
     login)
 	login $@
+	;;
+    exec)
+	execin "$@"
 	;;
     ls)
 	list
