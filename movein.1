@@ -1,0 +1,88 @@
+.\" Process this file with
+.\" groff -man -Tascii foo.1
+.\"
+.TH MOVEIN 1 "2011-10-10" movein
+.SH NAME
+ movein \- manage multiple overlayed git repositories
+.SH SYNOPSIS
+.B movein
+.IR command
+[
+.IR args ...
+]
+.SH DESCRIPTION
+Movein is a script which helps you to manage multiple git repositories
+which are checked out into the same directory.  A common reason for
+wanting to do this is to manage your home directory using multiple git
+repositories.
+.SH COMMANDS
+.B movein
+.IR init
+.RS 4
+Initialize movein.  Creates .moveinrc, updates .mrconfig
+.RE
+
+.B movein
+.IR ls
+.br
+.B movein
+.IR list
+.RS 4
+Show a list of local repositories
+.RE
+
+.B movein
+.IR ls-r
+.br
+.B movein
+.IR list-remotes
+.RS 4
+Show a list of remote repositories
+.RE
+
+.B movein
+.IR add
+repository_name
+.RS 4
+checkout the repository from the remote host and add it to mr's configuration
+.RE
+
+.B movein
+.IR new
+repository_name file1
+[
+file2 file3...
+]
+.RS 4
+checkout the repository from the remote host and add it to mr's configuration
+.RE
+
+.B movein
+.IR login
+repository_name
+.RS 4
+start a subshell in repository_name
+.RE
+
+
+.B movein
+.IR exec
+repository_name command
+[
+arg1 arg2...
+]
+.RS 4
+execute a command in the context of repository_name, for eample
+.RS 4
+movein exec myrepo git status
+.RE
+.RS 4
+movein exec myrepo git ls-files
+.RE
+.RE
+
+.SH "SEE ALSO"
+git(1), mr(1)
+.SH AUTHOR
+.TP
+Mike O'Connor
