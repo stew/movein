@@ -16,9 +16,12 @@ binary-indep:
 	-rm -rf /debian/tmp
 	$(INSTALL_DIR) debian/tmp/usr/bin \
 		       debian/tmp/usr/share/doc/movein \
+		       debian/tmp/usr/share/man/man1 \
 		       debian/tmp/DEBIAN
 
 	$(INSTALL_SCRIPT) movein debian/tmp/usr/bin
+	$(INSTALL_FILE) movein.1 debian/tmp/usr/share/man/man1
+	gzip -9 debian/tmp/usr/share/man/man1/movein.1
 
 	$(INSTALL_FILE) debian/changelog debian/tmp/usr/share/doc/movein/changelog.Debian
 	$(INSTALL_FILE) debian/copyright debian/tmp/usr/share/doc/movein/
