@@ -54,7 +54,7 @@ COMMANDS
       show a list of remote repositories
 
   add repository_name
-      checkout the repository from the remote host and add it to
+      checkout one or more repositories from the remote host and add it to
       mr's configuration
 
   new repository_name file1 [file2 file3...]  
@@ -166,32 +166,34 @@ execin() {
 }
 
 add() {
-    if [ $# -ne 1 ]; then 
+    if [ $# -lt 1 ]; then 
 	usage
     fi
-    REPO_NAME=$1.git ; shift
-    LOCAL_REPO=$LOCAL_REPOS/$REPO_NAME
-    REPO_URL=ssh://$GIT_HOST/$REMOTE_REPOS/$REPO_NAME
 
-    if [ -e "$LOCAL_REPO" ]; then
-	echo $LOCAL_REPO already exists
-	exit 1
-    else
-	trap "rm -rf $LOCAL_REPO" 0
-	mkdir "$LOCAL_REPO"
-	export GIT_DIR="$LOCAL_REPO"
-	git init --bare
-	git remote add origin $REPO_URL
-	git config branch.master.remote origin
-	git config branch.master.merge refs/heads/master
-	git config core.bare false
-	git config core.worktree ../../
-	git config status.showUntrackedFiles no
-	GIT_WORK_TREE="$LOCAL_REPO/../../" git pull
-	trap - 0
+    for REPO in "$@"; do
+      REPO_NAME=$REPO.git 
+      LOCAL_REPO=$LOCAL_REPOS/$REPO_NAME
+      REPO_URL=ssh://$GIT_HOST/$REMOTE_REPOS/$REPO_NAME
+      if [ -e "$LOCAL_REPO" ]; then
+          echo $LOCAL_REPO already exists
+          exit 1
+      else
+          trap "rm -rf $LOCAL_REPO" 0
+          mkdir "$LOCAL_REPO"
+          export GIT_DIR="$LOCAL_REPO"
+          git init --bare
+          git remote add origin $REPO_URL
+          git config branch.master.remote origin
+          git config branch.master.merge refs/heads/master
+          git config core.bare false
+          git config core.worktree ../../
+          git config status.showUntrackedFiles no
+          GIT_WORK_TREE="$LOCAL_REPO/../../" git pull
+          trap - 0
 
-	mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' 'REPO_NAME' '../../'"
-    fi
+          mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' 'REPO_NAME' '../../'"
+      fi
+    done
 }
 
 list() {
@@ -252,16 +254,16 @@ new() {
 command=$1 ; shift
 case "$command" in 
     init)
-	init $@
+	init "$@"
 	;;
     add)
-	add $@
+	add "$@"
 	;;
     new)
-	new $@
+	new "$@"
 	;;
     login)
-	login $@
+	login "$@"
 	;;
     exec)
 	execin "$@"
