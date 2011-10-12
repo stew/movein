@@ -53,6 +53,9 @@ COMMANDS
   list-remote
       show a list of remote repositories
 
+  locate pattern
+      locate which repositories contain files matching pattern
+
   add repository_name
       checkout one or more repositories from the remote host and add it to
       mr's configuration
@@ -206,6 +209,13 @@ listremote() {
     " </dev/null
 }
 
+locate() {
+    local REPO
+    for REPO in $($0 list); do
+      (cd /; $0 exec "$REPO" git ls-files | sed -nr "/$1/{s/^/$REPO:/p}")
+    done
+}
+
 new() {
     if [ $# -lt 2 ]; then 
 	usage
@@ -279,6 +289,9 @@ case "$command" in
 	;;
     list-remote)
 	listremote
+	;;
+    locate)
+	locate "$@"
 	;;
 
     *)
