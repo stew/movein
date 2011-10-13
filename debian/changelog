@@ -2,7 +2,8 @@ movein (1.2-1) unstable; urgency=low
 
   * new upstream version
   * add an "exec" command (Thanks: Stuart Prescott)
-  * add a "preflight" check to make sure we have mr and git (Thanks: Joerg Jaspert)
+  * add a "preflight" check to make sure we have mr and git (Thanks:
+    Joerg Jaspert)
   * add a manpage
 
  -- Mike O'Connor <stew@debian.org>  Wed, 12 Oct 2011 21:11:12 -0400
