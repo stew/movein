@@ -207,6 +207,9 @@ listremote() {
 
 locate() {
     local REPO
+    if [ $# -ne 1 ]; then
+        usage
+    fi
     for REPO in $($0 list); do
         (cd /; $0 exec "$REPO" git ls-files | sed -nr "/$1/{s/^/$REPO:/p}")
     done
