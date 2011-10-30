@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright © 2008 Mike O'Connor <stew@vireo.org>
 #
@@ -7,7 +7,7 @@
 # Free Software Foundation; either version 2, or (at your option) any
 # later version.
 #
-# this program is distributed in the hope that it will be useful,
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -53,8 +53,11 @@ COMMANDS
   list-remote
       show a list of remote repositories
 
+  locate pattern
+      locate which repositories contain files matching pattern
+
   add repository_name
-      checkout the repository from the remote host and add it to
+      checkout one or more repositories from the remote host and add it to
       mr's configuration
 
   new repository_name file1 [file2 file3...]
@@ -77,18 +80,19 @@ EOF
 
 [ $# -ge 1 ] || usage
 
-GIT_HOST=git.$(hostname -d)
+GIT_HOST=git.$(hostname -d || echo "example.com")
 REMOTE_REPOS=~/git
 LOCAL_REPOS=~/.movein
 MRCONFIG=~/.mrconfig
 MOVEINRC=~/.moveinrc
+CREATE_REMOTE=0
 
 [ -e "$MOVEINRC" ] && . "$MOVEINRC"
 
 init() {
 
     if [ $# -ne 0 ]; then
-            usage
+        usage
     fi
 
     if [ -e $MOVEINRC ]; then
@@ -108,6 +112,25 @@ init() {
         REMOTE_REPOS=~/git
     fi
 
+    case $GIT_HOST in
+        *github*)
+            DEFAULT_CREATE_REMOTE=0
+            CREATE_REMOTE_OPTIONS="[yN]"
+            ;;
+        *)
+            DEFAULT_CREATE_REMOTE=1
+            CREATE_REMOTE_OPTIONS="[Yn]"
+            ;;
+    esac
+
+    echo -n "should \"movein new\" run \"git init\" on the remote host? (github users should say \"no\") $CREATE_REMOTE_OPTIONS"
+    read CREATE_REMOTE_SELECTION
+    case "$CREATE_REMOTE_SELECTION" in
+        [yY]) CREATE_REMOTE=1 ;;
+        [nN]) CREATE_REMOTE=0 ;;
+        *) CREATE_REMOTE=$DEFAULT_CREATE_REMOTE
+    esac
+
     echo -n "Local repository directory? [~/.movein] "
     read LOCAL_REPOS
     if [ -z "$LOCAL_REPOS" ]; then
@@ -125,6 +148,7 @@ GIT_HOST=$GIT_HOST
 REMOTE_REPOS=$REMOTE_REPOS
 LOCAL_REPOS=$LOCAL_REPOS
 MRCONFIG=$MRCONFIG
+CREATE_REMOTE=$CREATE_REMOTE
 EOF
 
     if [ ! -d "$LOCAL_REPOS" ]; then
@@ -148,7 +172,7 @@ login() {
 
 execin() {
     local REPO
-    if [ $# -lt 1 ]; then
+    if [ $# -lt 2 ]; then
        usage
     fi
 
@@ -161,32 +185,35 @@ execin() {
 }
 
 add() {
-    if [ $# -ne 1 ]; then
+    if [ $# -lt 1 ]; then
        usage
     fi
-    REPO_NAME=$1.git ; shift
-    LOCAL_REPO=$LOCAL_REPOS/$REPO_NAME
-    REPO_URL=ssh://$GIT_HOST/$REMOTE_REPOS/$REPO_NAME
 
-    if [ -e "$LOCAL_REPO" ]; then
+    for REPO in "$@"; do
+        REPO_NAME=$REPO.git
+        LOCAL_REPO=$LOCAL_REPOS/$REPO_NAME
+        REPO_URL=ssh://$GIT_HOST/$REMOTE_REPOS/$REPO_NAME
+
+        if [ -e "$LOCAL_REPO" ]; then
             echo $LOCAL_REPO already exists
             exit 1
-    else
-        trap "rm -rf $LOCAL_REPO" 0
-        mkdir "$LOCAL_REPO"
-        export GIT_DIR="$LOCAL_REPO"
-        git init --bare
-        git remote add origin $REPO_URL
-        git config branch.master.remote origin
-        git config branch.master.merge refs/heads/master
-        git config core.bare false
-        git config core.worktree ../../
-        git config status.showUntrackedFiles no
-        GIT_WORK_TREE="$LOCAL_REPO/../../" git pull
-        trap - 0
+        else
+            trap "unset GIT_DIR; unset GIT_WORK_TREE; rm -rf $LOCAL_REPO" 0
+            mkdir "$LOCAL_REPO"
+            export GIT_DIR="$LOCAL_REPO"
+            git init --bare
+            git remote add origin $REPO_URL
+            git config branch.master.remote origin
+            git config branch.master.merge refs/heads/master
+            git config core.bare false
+            git config core.worktree ../../
+            git config status.showUntrackedFiles no
+            GIT_WORK_TREE="$LOCAL_REPO/../../" git pull
+            trap - 0
 
-        mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' 'REPO_NAME' '../../'"
-    fi
+            mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' 'REPO_NAME' '../../'"
+        fi
+    done
 }
 
 list() {
@@ -199,29 +226,41 @@ listremote() {
     " </dev/null
 }
 
+locate() {
+    local REPO
+    if [ $# -ne 1 ]; then
+        usage
+    fi
+    for REPO in $($0 list); do
+        (cd /; $0 exec "$REPO" git ls-files | sed -nr "/$1/{s/^/$REPO:/p}")
+    done
+}
+
 new() {
     if [ $# -lt 2 ]; then
-            usage
+        usage
     fi
     REPO_NAME=$1.git ; shift
     LOCAL_REPO="$LOCAL_REPOS/$REPO_NAME"
     REPO_URL="ssh://$GIT_HOST/$REMOTE_REPOS/$REPO_NAME"
 
     if [ ! -e "$1" ]; then
-            echo $1 not found
-            exit 1
+        echo $1 not found
+        exit 1
     fi
 
     if [ -e "$LOCAL_REPO" ]; then
-            echo $LOCAL_REPO already exists
-            exit 1
+        echo $LOCAL_REPO already exists
+        exit 1
     else
-            trap "rm -rf $LOCAL_REPO" 0
-            mkdir -p "$LOCAL_REPO"
+        trap "unset GIT_DIR; unset GIT_WORK_TREE; rm -rf $LOCAL_REPO" 0
+        mkdir -p "$LOCAL_REPO"
 
+        if [ $CREATE_REMOTE -ne 0 ]; then
             ssh $GIT_HOST "
-               GIT_DIR=$REMOTE_REPOS/$REPO_NAME git --bare init
-        " </dev/null
+                GIT_DIR=$REMOTE_REPOS/$REPO_NAME git --bare init
+            " </dev/null
+        fi
 
         export GIT_DIR="$LOCAL_REPO"
         git init --bare
@@ -270,18 +309,18 @@ command=$1 ; shift
 case "$command" in
     init)
        preflight
-       init $@
+       init "$@"
        ;;
     add)
        preflight
-       add $@
+       add "$@"
        ;;
     new)
        preflight
-       new $@
+       new "$@"
        ;;
     login)
-       login $@
+       login "$@"
        ;;
     exec)
        execin "$@"
@@ -297,6 +336,9 @@ case "$command" in
        ;;
     list-remote)
        listremote
+       ;;
+    locate)
+       locate "$@"
        ;;
 
     *)

@@ -44,7 +44,8 @@ Show a list of remote repositories
 .IR add
 repository_name
 .RS 4
-checkout the repository from the remote host and add it to mr's configuration
+checkout one or more repositories from the remote host and add it to
+mr's configuration
 .RE
 
 .B movein
@@ -64,6 +65,13 @@ repository_name
 start a subshell in repository_name
 .RE
 
+.B movein
+.IR locate
+pattern
+.RS 4
+search for files matching "pattern" (which is an extended regular expression
+passed to sed(1)) in all local repositories
+.RE
 
 .B movein
 .IR exec
