@@ -85,7 +85,7 @@ REMOTE_REPOS=~/git
 LOCAL_REPOS=~/.movein
 MRCONFIG=~/.mrconfig
 MOVEINRC=~/.moveinrc
-CREATE_REMOTE=0
+CREATE_REMOTE=1
 
 [ -e "$MOVEINRC" ] && . "$MOVEINRC"
 
