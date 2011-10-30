@@ -1,3 +1,12 @@
+movein (1.3-1) unstable; urgency=low
+
+  * new upstream version
+  * "locate" command (Thanks: Stuart Prescott)
+  * improved error handling (Thanks: Joseph Liu)
+  * added new CREATE_REMOTE option for github users (Thanks: Joseph Lie)
+
+ -- Mike O'Connor <stew@debian.org>  Sun, 30 Oct 2011 14:42:20 -0400
+
 movein (1.2-1) unstable; urgency=low
 
   * new upstream version
