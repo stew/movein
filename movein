@@ -177,7 +177,7 @@ add() {
             echo $LOCAL_REPO already exists
             exit 1
         else
-            trap "rm -rf $LOCAL_REPO" 0
+            trap "unset GIT_DIR; unset GIT_WORK_TREE; rm -rf $LOCAL_REPO" 0
             mkdir "$LOCAL_REPO"
             export GIT_DIR="$LOCAL_REPO"
             git init --bare
@@ -232,7 +232,7 @@ new() {
         echo $LOCAL_REPO already exists
         exit 1
     else
-        trap "rm -rf $LOCAL_REPO" 0
+        trap "unset GIT_DIR; unset GIT_WORK_TREE; rm -rf $LOCAL_REPO" 0
         mkdir -p "$LOCAL_REPO"
 
         ssh $GIT_HOST "
