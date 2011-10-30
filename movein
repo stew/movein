@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright © 2008 Mike O'Connor <stew@vireo.org>
 #
@@ -80,11 +80,12 @@ EOF
 
 [ $# -ge 1 ] || usage
 
-GIT_HOST=git.$(hostname -d)
+GIT_HOST=git.$(hostname -d || echo "example.com")
 REMOTE_REPOS=~/git
 LOCAL_REPOS=~/.movein
 MRCONFIG=~/.mrconfig
 MOVEINRC=~/.moveinrc
+CREATE_REMOTE=0
 
 [ -e "$MOVEINRC" ] && . "$MOVEINRC"
 
@@ -111,6 +112,25 @@ init() {
         REMOTE_REPOS=~/git
     fi
 
+    case $GIT_HOST in
+        *github*)
+            DEFAULT_CREATE_REMOTE=0
+            CREATE_REMOTE_OPTIONS="[yN]"
+            ;;
+        *)
+            DEFAULT_CREATE_REMOTE=1
+            CREATE_REMOTE_OPTIONS="[Yn]"
+            ;;
+    esac
+
+    echo -n "should \"movein new\" run \"git init\" on the remote host? (github users should say \"no\") $CREATE_REMOTE_OPTIONS"
+    read CREATE_REMOTE_SELECTION
+    case "$CREATE_REMOTE_SELECTION" in
+        [yY]) CREATE_REMOTE=1 ;;
+        [nN]) CREATE_REMOTE=0 ;;
+        *) CREATE_REMOTE=$DEFAULT_CREATE_REMOTE
+    esac
+
     echo -n "Local repository directory? [~/.movein] "
     read LOCAL_REPOS
     if [ -z "$LOCAL_REPOS" ]; then
@@ -128,6 +148,7 @@ GIT_HOST=$GIT_HOST
 REMOTE_REPOS=$REMOTE_REPOS
 LOCAL_REPOS=$LOCAL_REPOS
 MRCONFIG=$MRCONFIG
+CREATE_REMOTE=$CREATE_REMOTE
 EOF
 
     if [ ! -d "$LOCAL_REPOS" ]; then
@@ -235,9 +256,11 @@ new() {
         trap "unset GIT_DIR; unset GIT_WORK_TREE; rm -rf $LOCAL_REPO" 0
         mkdir -p "$LOCAL_REPO"
 
-        ssh $GIT_HOST "
-            GIT_DIR=$REMOTE_REPOS/$REPO_NAME git --bare init
-        " </dev/null
+        if [ $CREATE_REMOTE -ne 0 ]; then
+            ssh $GIT_HOST "
+                GIT_DIR=$REMOTE_REPOS/$REPO_NAME git --bare init
+            " </dev/null
+        fi
 
         export GIT_DIR="$LOCAL_REPO"
         git init --bare
