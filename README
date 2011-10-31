@@ -173,9 +173,3 @@ repositories.  Here's an example:
 	    mr update: finished (3 ok)
 	    stew@guppy:~ $ mr update	    
 
-There are still issues I'd like to address.  The big one in my mind is
-that there is no .gitignore.  So when you "movein login
-somerepository" then run "git status", It tells you about hundreds of
-untracked files in your home directory.  Ideally, I just want to know
-about the files which are already associated with the repository I'm
-logged into.
