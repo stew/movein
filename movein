@@ -176,7 +176,6 @@ login() {
     fi
 
     export GIT_DIR="$LOCAL_REPOS/${1}.git"
-    export GIT_WORK_TREE="$GIT_DIR/$(git config --get core.worktree)"
 
     GIT_PS1_SHOWUNTRACKEDFILES= PSMOVEIN="movein:${1}" $SHELL -i || :
 }
@@ -190,7 +189,6 @@ execin() {
     REPO=$1;shift
 
     export GIT_DIR="$LOCAL_REPOS/${REPO}.git"
-    export GIT_WORK_TREE="$GIT_DIR/$(git config --get core.worktree)"
 
     "$@"
 }
