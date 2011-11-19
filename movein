@@ -159,13 +159,23 @@ EOF
 
 }
 
+git_work_tree() {
+    local TEMP_REPO
+    TEMP_REPO=$1
+    GIT_WORK_TREE=../../
+
+    while [ "${TEMP_REPO#*/}" != "$TEMP_REPO" ]; do
+        TEMP_REPO="${TEMP_REPO#*/}"
+        GIT_WORK_TREE="../$GIT_WORK_TREE"
+    done
+}
+
 login() {
     if [ $# -ne 1 ]; then
        usage
     fi
 
     export GIT_DIR="$LOCAL_REPOS/${1}.git"
-    export GIT_WORK_TREE="$GIT_DIR/$(git config --get core.worktree)"
 
     GIT_PS1_SHOWUNTRACKEDFILES= PSMOVEIN="movein:${1}" $SHELL -i || :
 }
@@ -179,7 +189,6 @@ execin() {
     REPO=$1;shift
 
     export GIT_DIR="$LOCAL_REPOS/${REPO}.git"
-    export GIT_WORK_TREE="$GIT_DIR/$(git config --get core.worktree)"
 
     "$@"
 }
@@ -199,30 +208,31 @@ add() {
             exit 1
         else
             trap "unset GIT_DIR; unset GIT_WORK_TREE; rm -rf $LOCAL_REPO" 0
-            mkdir "$LOCAL_REPO"
+            mkdir -p "$LOCAL_REPO"
             export GIT_DIR="$LOCAL_REPO"
+            git_work_tree "$REPO_NAME"
             git init --bare
             git remote add origin $REPO_URL
             git config branch.master.remote origin
             git config branch.master.merge refs/heads/master
             git config core.bare false
-            git config core.worktree ../../
+            git config core.worktree "$GIT_WORK_TREE"
             git config status.showUntrackedFiles no
-            GIT_WORK_TREE="$LOCAL_REPO/../../" git pull
+            git pull
             trap - 0
 
-            mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' 'REPO_NAME' '../../'"
+            mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' '$REPO_NAME' '$GIT_WORK_TREE'"
         fi
     done
 }
 
 list() {
-    find "${LOCAL_REPOS}" -mindepth 1 -maxdepth 1 -type d | sed 's,^.*/\([^/]*\).git$,\1,'
+    find "${LOCAL_REPOS}" -mindepth 1 -type d -name '*.git' | sed "s,${LOCAL_REPOS}/,,"
 }
 
 listremote() {
     ssh $GIT_HOST "
-        find '${REMOTE_REPOS}' -mindepth 1 -maxdepth 1 -type d | sed 's,^.*/\([^/]*\).git$,\1,'
+        find '${REMOTE_REPOS}' -mindepth 1 -type d -name '*.git' | sed 's,${REMOTE_REPOS}/,,'
     " </dev/null
 }
 
@@ -263,21 +273,21 @@ new() {
         fi
 
         export GIT_DIR="$LOCAL_REPO"
+        git_work_tree "$REPO_NAME"
         git init --bare
         git remote add origin $REPO_URL
         git config branch.master.remote origin
         git config branch.master.merge refs/heads/master
         git config core.bare false
-        git config core.worktree ../../
+        git config core.worktree "$GIT_WORK_TREE"
         git config status.showUntrackedFiles no
-        export GIT_WORK_TREE="$LOCAL_REPO/../../"
         git add "$@"
         git commit -m "initial checkin"
         git push --all
 
         trap - 0
 
-        mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' 'REPO_NAME' '../../'"
+        mr -c "$MRCONFIG" config "$LOCAL_REPO" checkout="git_fake_bare_checkout '$REPO_URL' '$REPO_NAME' '$GIT_WORK_TREE'"
     fi
 
 }
