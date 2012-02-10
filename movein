@@ -227,12 +227,14 @@ add() {
 }
 
 list() {
-    find "${LOCAL_REPOS}" -mindepth 1 -type d -name '*.git' | sed "s,${LOCAL_REPOS}/,,"
+    find "${LOCAL_REPOS}" -mindepth 1 -type d -name '*.git' |
+      sed "s,${LOCAL_REPOS}/,,; s,\.git$,,"
 }
 
 listremote() {
     ssh $GIT_HOST "
-        find '${REMOTE_REPOS}' -mindepth 1 -type d -name '*.git' | sed 's,${REMOTE_REPOS}/,,'
+        find '${REMOTE_REPOS}' -mindepth 1 -type d -name '*.git' |
+          sed 's,${REMOTE_REPOS}/,,; s,\.git$,,'
     " </dev/null
 }
 
