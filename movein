@@ -81,7 +81,7 @@ EOF
 [ $# -ge 1 ] || usage
 
 GIT_HOST=git.$(hostname -d || echo "example.com")
-REMOTE_REPOS=~/git
+REMOTE_REPOS='~/git'
 LOCAL_REPOS=~/.movein
 MRCONFIG=~/.mrconfig
 MOVEINRC=~/.moveinrc
@@ -109,7 +109,7 @@ init() {
     echo -n "path to remote repositories? [~/git] "
     read REMOTE_REPOS
     if [ -z "$REMOTE_REPOS" ]; then
-        REMOTE_REPOS=~/git
+        REMOTE_REPOS="'~/git'"
     fi
 
     case $GIT_HOST in
