@@ -162,10 +162,10 @@ EOF
 git_work_tree() {
     local TEMP_REPO
     TEMP_REPO=$1
-    GIT_WORK_TREE=../../
+    GIT_WORK_TREE=../
 
-    while [ "${TEMP_REPO#*/}" != "$TEMP_REPO" ]; do
-        TEMP_REPO="${TEMP_REPO#*/}"
+    while [ "${TEMP_REPO%/*}" != "$HOME" ]; do
+        TEMP_REPO="${TEMP_REPO%/*}"
         GIT_WORK_TREE="../$GIT_WORK_TREE"
     done
 }
@@ -210,7 +210,7 @@ add() {
             trap "unset GIT_DIR; unset GIT_WORK_TREE; rm -rf $LOCAL_REPO" 0
             mkdir -p "$LOCAL_REPO"
             export GIT_DIR="$LOCAL_REPO"
-            git_work_tree "$REPO_NAME"
+            git_work_tree "$LOCAL_REPO"
             git init --bare
             git remote add origin $REPO_URL
             git config branch.master.remote origin
@@ -275,7 +275,7 @@ new() {
         fi
 
         export GIT_DIR="$LOCAL_REPO"
-        git_work_tree "$REPO_NAME"
+        git_work_tree "$LOCAL_REPO"
         git init --bare
         git remote add origin $REPO_URL
         git config branch.master.remote origin
