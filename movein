@@ -155,7 +155,13 @@ EOF
         mkdir -p "$LOCAL_REPOS"
     fi
 
-    mr -c "$MRCONFIG" config DEFAULT include="cat /usr/share/mr/git-fake-bare"
+    if [ -f /usr/share/mr/lib/git-fake-bare ] ; then
+        GIT_FAKE_BARE="/usr/share/mr/lib/git-fake-bare"
+    else
+        GIT_FAKE_BARE="/usr/share/mr/git-fake-bare"
+    fi
+
+    mr -c "$MRCONFIG" config DEFAULT include="cat $GIT_FAKE_BARE"
 
 }
 
