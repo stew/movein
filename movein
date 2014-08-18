@@ -152,7 +152,7 @@ CREATE_REMOTE=$CREATE_REMOTE
 EOF
 
     if [ ! -d "$LOCAL_REPOS" ]; then
-       mkdir -p "$LOCAL_REPOS"
+        mkdir -p "$LOCAL_REPOS"
     fi
 
     mr -c "$MRCONFIG" config DEFAULT include="cat /usr/share/mr/git-fake-bare"
